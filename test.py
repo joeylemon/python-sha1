@@ -6,34 +6,31 @@ import sha
 
 
 class TestUtilities(unittest.TestCase):
-    def test_create_hex_value(self):
+    def test_combine_words(self):
+        """ Ensure words are correctly combined into a single integer """
         self.assertEqual(
-            sha.create_hex_value([0xaaaaaaaa, 0xbbbbbbbb, 0xcccccccc], 32),
+            sha.combine_words(0xaaaaaaaa, 0xbbbbbbbb, 0xcccccccc),
             0xaaaaaaaabbbbbbbbcccccccc)
         self.assertEqual(
-            sha.create_hex_value([0x00010000, 0xbbbbbbbb, 0x00001000], 32),
+            sha.combine_words(0x00010000, 0xbbbbbbbb, 0x00001000),
             0x00010000bbbbbbbb00001000)
-        self.assertEqual(
-            sha.create_hex_value([0xaa, 0xbb, 0xcc], 8),
-            0xaabbcc)
-        self.assertNotEqual(
-            sha.create_hex_value([0xaa, 0xbb, 0xcc], 32),
-            0xaabbcc)
 
-    def test_extract_hex_words(self):
+    def test_extract_words(self):
+        """ Ensure words are correctly extracted from an integer """
         self.assertEqual(
-            sha.extract_hex_words(0xaabbccddeeffaabb, total_bits=64),
+            sha.extract_words(0xaabbccddeeffaabb, total_bits=64),
             [0xaabbccdd, 0xeeffaabb])
         self.assertEqual(
-            sha.extract_hex_words(
+            sha.extract_words(
                 0xaaaaaaaabbbbbbbbccccccccdddddddd, total_bits=128),
             [0xaaaaaaaa, 0xbbbbbbbb, 0xcccccccc, 0xdddddddd])
         self.assertEqual(
-            sha.extract_hex_words(
+            sha.extract_words(
                 0x67452301efcdab8998badcfe10325476c3d2e1f0, total_bits=160),
             [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0])
 
     def test_ROTL(self):
+        """ Ensure the rotate left function works properly """
         self.assertEqual(sha.ROTL(0xaabbccdd, 4), 0xabbccdda)
         self.assertEqual(sha.ROTL(0xdeadbeef, 4), 0xeadbeefd)
         self.assertEqual(
@@ -54,6 +51,7 @@ class TestSHA(unittest.TestCase):
         return ''.join(random.choice(string.printable) for _ in range(n))
 
     def test_pad(self):
+        """ Ensure messages are padded correctly """
         msg = self.get_bin("a")
         self.assertEqual(
             sha.pad("a"),
@@ -77,6 +75,7 @@ class TestSHA(unittest.TestCase):
             int(msg + '1' + '0' * (1536 - len(msg) - 65) + "{:064b}".format(len(msg)), 2))
 
     def test_parse(self):
+        """ Ensure message blocks are separated into correct 512-bit chunks """
         msg = self.get_bin("abc" * 19)
         padded_str = msg + '1' + '0' * \
             (1024 - len(msg) - 65) + "{:064b}".format(len(msg))
@@ -92,6 +91,7 @@ class TestSHA(unittest.TestCase):
             [int(padded_str[:512], 2), int(padded_str[512:1024], 2), int(padded_str[1024:], 2)])
 
     def test_sha1(self):
+        """ Ensure SHA1 works by comparing against hashlib.sha1 """
         for _ in range(100):
             rand_msg = self.rand_str(100)
             self.assertEqual(hashlib.sha1(
