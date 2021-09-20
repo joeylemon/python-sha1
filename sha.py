@@ -145,14 +145,14 @@ def K(t: int) -> int:
         return 0xca62c1d6
 
 
-def extract_words(val: int, total_bits: int) -> list[int]:
+def extract_words(val: int, total_bits: int) -> list:
     """
     Given an integer, extract it into an array of words.
     """
     return [(val >> (i * WORD_BIT_LENGTH)) & WORD_BIT_MASK for i in range(0, total_bits // WORD_BIT_LENGTH)][::-1]
 
 
-def combine_words(*args: list[int]) -> int:
+def combine_words(*args: list) -> int:
     """
     Given an array of word values, combine them into a single integer value.
     """
@@ -163,7 +163,7 @@ def combine_words(*args: list[int]) -> int:
     return val
 
 
-def add(*args: list[int]) -> int:
+def add(*args: list) -> int:
     """
     Perform addition (+) modulo 2^32. (FIPS 180-4 6.1.2)
     """
@@ -184,7 +184,7 @@ def __print_round_header() -> None:
             f"\n{'t':<3}  {'a':<8}  {'b':<8}  {'c':<8}  {'d':<8}  {'e':<8}  {'f(t)':<8}  {'K(t)':<8}  {'W[t]':<8}")
 
 
-def __print_schedule(W: list[int]) -> None:
+def __print_schedule(W: list) -> None:
     """ Print the message schedule values if verbose is enabled. """
     if VERBOSE:
         for i in range(0, 80, 10):
