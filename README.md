@@ -1,4 +1,5 @@
 # python-sha1
+![Test](https://github.com/joeylemon/python-sha1/workflows/Test/badge.svg)
 
 An implementation of the SHA-1 algorithm in Python, following the Federal Information Processing Standards Publication 180-4 ([FIPS 180-4](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf)) specification sheet.
 
