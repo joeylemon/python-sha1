@@ -54,24 +54,24 @@ class TestSHA(unittest.TestCase):
         """ Ensure messages are padded correctly """
         msg = self.get_bin("a")
         self.assertEqual(
-            sha.pad("a"),
+            sha.pad(sha.encode_string("a")),
             int(msg + '1' + '0' * (512 - len(msg) - 65) + "{:064b}".format(len(msg)), 2))
 
         msg = self.get_bin("abc")
         self.assertEqual(
-            sha.pad("abc"),
+            sha.pad(sha.encode_string("abc")),
             int(msg + '1' + '0' * (512 - len(msg) - 65) + "{:064b}".format(len(msg)), 2))
 
         # Since message is > 447, there should be 2 blocks of 512 bits
         msg = self.get_bin("abc" * 19)
         self.assertEqual(
-            sha.pad("abc" * 19),
+            sha.pad(sha.encode_string("abc" * 19)),
             int(msg + '1' + '0' * (1024 - len(msg) - 65) + "{:064b}".format(len(msg)), 2))
 
         # Since message is > 447*2, there should be 3 blocks of 512 bits
         msg = self.get_bin("teststring" * 12)
         self.assertEqual(
-            sha.pad("teststring" * 12),
+            sha.pad(sha.encode_string("teststring" * 12)),
             int(msg + '1' + '0' * (1536 - len(msg) - 65) + "{:064b}".format(len(msg)), 2))
 
     def test_parse(self):
@@ -92,10 +92,10 @@ class TestSHA(unittest.TestCase):
 
     def test_sha1(self):
         """ Ensure SHA1 works by comparing against hashlib.sha1 """
-        for _ in range(100):
+        for _ in range(500):
             rand_msg = self.rand_str(100)
             self.assertEqual(hashlib.sha1(
-                rand_msg.encode()).hexdigest(), sha.sha1(rand_msg))
+                rand_msg.encode()).hexdigest(), sha.sha1(sha.encode_string(rand_msg)))
 
 
 if __name__ == "__main__":

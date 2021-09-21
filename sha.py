@@ -18,7 +18,7 @@ IV = 0x67452301efcdab8998badcfe10325476c3d2e1f0
 VERBOSE = False
 
 
-def sha1(msg: str) -> str:
+def sha1(msg: int) -> str:
     """
     Pre-process the message with padding, parse it into blocks,
     and hash each block using hash(iv, b) where iv is the previous
@@ -26,9 +26,13 @@ def sha1(msg: str) -> str:
     """
     blocks = parse(pad(msg))
     cv = IV
+
+    # Hash each block using the previous hash value as the IV
     for block in blocks:
         cv = hash(cv, block)
-    return "{:040x}".format(cv)
+
+    # Return the zero-padded 40-byte hex string
+    return f"{cv:040x}"
 
 
 def hash(iv: int, msg_block: int) -> int:
@@ -54,25 +58,25 @@ def hash(iv: int, msg_block: int) -> int:
     return combine_words(add(a, h0), add(b, h1), add(c, h2), add(d, h3), add(e, h4))
 
 
-def pad(msg: str) -> int:
+def pad(msg: int, length: int = None) -> int:
     """
-    Pad the ASCII message into a multiple of 512 and return an integer
+    Pad the message into a multiple of 512 bits and return an integer
     equivalent to the bits of the padded message. (FIPS 180-4 5.1.1)
     """
 
     # Suppose that the length of the message is l bits
-    l = len(msg) * 8
+    # Round l to the nearest multiple of 8
+    l = (8 * round(msg.bit_length() / 8))
+    if length is not None:
+        l = (8 * round(length / 8))
 
     # k zero bits, where k is the smallest, non-negative
     # solution to the equation l + 1 + k = 448 mod 512
     k = (448 - l - 1) % 512
 
-    # Convert the msg characters to 8-bit binary strings
-    bits = int(''.join("{:08b}".format(ord(c)) for c in msg), 2)
-
     # Put the message to the far left so it can be followed
     # by a 1-bit, k 0-bits, and 64 bits for length
-    bits <<= 1 + k + 64
+    bits = msg << 1 + k + 64
 
     # Add the 1-bit
     bits |= (1 << (k + 64))
@@ -87,10 +91,8 @@ def parse(padded_msg: int) -> list:
     """
     Parse the padded message into 512-bit blocks. (FIPS 180-4 5.2.1)
     """
-    num_bits = padded_msg.bit_length()
-
-    # Round num_bits to the nearest 512, then divide by 512
-    num_blocks = (512 * round(num_bits / 512)) // 512
+    # Round the number of bits to the nearest 512, then divide by 512
+    num_blocks = (512 * round(padded_msg.bit_length() / 512)) // 512
 
     # The blocks are the 512-bit sections of the padded message
     return [(padded_msg >> (i * 512) & BIT_MASK_512)
@@ -145,6 +147,13 @@ def K(t: int) -> int:
         return 0xca62c1d6
 
 
+def add(*args: list) -> int:
+    """
+    Perform addition (+) modulo 2^32. (FIPS 180-4 6.1.2)
+    """
+    return sum(args) & WORD_BIT_MASK
+
+
 def extract_words(val: int, total_bits: int) -> list:
     """
     Given an integer, extract it into an array of words.
@@ -163,11 +172,12 @@ def combine_words(*args: list) -> int:
     return val
 
 
-def add(*args: list) -> int:
+def encode_string(msg: str) -> int:
     """
-    Perform addition (+) modulo 2^32. (FIPS 180-4 6.1.2)
+    Encode a string into an integer representation.
+    e.g. encode_string("abc") => 6382179 = 0x616263
     """
-    return sum(args) & WORD_BIT_MASK
+    return int(''.join(f"{ord(c):02x}" for c in msg), 16)
 
 
 def __print_round(t: int, a: int, b: int, c: int, d: int, e: int, ft: int, Kt: int, Wt: int) -> None:
@@ -188,7 +198,7 @@ def __print_schedule(W: list) -> None:
     """ Print the message schedule values if verbose is enabled. """
     if VERBOSE:
         for i in range(0, 80, 10):
-            vals = '  '.join("{:08x}".format(w) for w in W[i:i+10])
+            vals = '  '.join(f"{w:08x}" for w in W[i:i+10])
             W_range = f"[{i}...{i+9}]"
             print(f"W{W_range:<9} = {vals}")
 
@@ -208,4 +218,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     VERBOSE = args.verbose
 
-    print(sha1(args.value))
+    print(sha1(encode_string(args.value)))
