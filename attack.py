@@ -62,9 +62,7 @@ def run(S: str, m: str, m_malicious: str, MAC: str = None):
     S = (S + "pad"*16)[:16]
 
     # Alice calculates MAC = SHA1(S || m)
-    MAC_a = int(sha.sha1(sha.encode_string(S + m)), 16)
-    if MAC:
-        MAC_a = int(MAC, 16)
+    MAC_a = int(sha.sha1(sha.encode_string(S + m)), 16) if not MAC else int(MAC, 16)
 
     # Mallory extends the message m and sends Bob m' and MAC'
     m_prime, MAC_prime = extend(m, m_malicious, MAC_a)
@@ -121,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose",
                         action="store_true",
                         help="enable verbose logging")
-    parser.add_argument("secret",
+    parser.add_argument("--secret",
                         type=str,
                         help="the secret to use for HMAC")
     parser.add_argument("message",
@@ -136,9 +134,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     VERBOSE = args.verbose
 
-    MAC = sha.sha1(sha.encode_string(args.secret + args.message))
-    if args.mac:
-        MAC = args.mac
+    if not args.secret and not args.mac:
+        print("error: must specify either a secret or a MAC")
+        exit(1)
+    if not args.secret:
+        args.secret = "secret"
+
+    MAC = args.mac if args.mac else sha.sha1(sha.encode_string(args.secret + args.message))
 
     m_prime, MAC_prime, HMAC = run(args.secret, args.message, args.malicious, args.mac)
 
